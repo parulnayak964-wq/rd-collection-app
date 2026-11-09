@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RD App - Mehsana</title>
+<style>
+*{box-sizing:border-box;font-family:Arial,sans-serif}
+body{margin:0;background:#f1f5f9;padding:10px}
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tabs button{flex:1;padding:12px 5px;border:0;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;background:#e2e8f0}
+.tabs button.active{background:#1e40af;color:#fff}
+.card{background:#fff;padding:14px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+label{display:block;font-weight:700;font-size:13px;color:#334155;margin:12px 0 5px}
+input,select{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:8px;font-size:15px}
+.row{display:flex;gap:10px}
+.row>div{flex:1}
+.btn{width:100%;background:#1e40af;color:#fff;border:0;padding:13px;border-radius:10px;font-weight:800;font-size:16px;margin-top:16px;cursor:pointer}
+.cust{border:1px solid #e2e8f0;padding:12px;border-radius:10px;margin-top:10px}
+.cust b{font-size:16px}
+.small{font-size:12px;color:#64748b}
+.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700}
+.red{background:#fee2e2;color:#b91c1c}
+.green{background:#dcfce7;color:#166534}
+.orange{background:#ffedd5;color:#9a3412}
+.del{color:red;background:none;border:0;float:right;font-weight:700}
+</style>
+</head>
+<body>
+
+<div class="tabs">
+<button id="t1" class="active" onclick="showTab(1)">+ Add Customer</button>
+<button id="t2" onclick="showTab(2)">₹ Jama Karo</button>
+<button id="t3" onclick="showTab(3)">⚠️ Baki Wale</button>
+</div>
+
+<!-- TAB 1 -->
+<div id="tab1" class="card">
+<label>Naam *</label><input id="f_name" placeholder="Jayeshkumar N Pandya">
+<label>Account No *</label><input id="f_ac" placeholder="020069003243">
+<label>CIF No</label><input id="f_cif" placeholder="Ex: 987654">
+<label>Mobile Number</label><input id="f_mob" placeholder="99796...">
+<label>Address</label><input id="f_addr" placeholder="Panchot">
+<div class="row">
+<div><label>Monthly RD Amount *</label><input id="f_amt" type="number" placeholder="2000"></div>
+<div><label>Start Date *</label><input id="f_start" type="date"></div>
+</div>
+<label>Due Date *</label><input id="f_due" type="number" placeholder="Ex: 17" min="1" max="31">
+<button class="btn" onclick="addCustomer()">Customer Save Karo</button>
+<div id="list"></div>
+</div>
+
+<!-- TAB 2 -->
+<div id="tab2" class="card" style="display:none">
+<label>Customer Chuno</label><select id="j_cust"></select>
+<label>Kitna Jama Karna Hai? ₹</label><input id="j_amt" type="number" placeholder="2000">
+<label>Mahina</label><input id="j_month" type="month">
+<button class="btn" onclick="addJama()">Jama Save Karo</button>
+<div id="j_list"></div>
+</div>
+
+<!-- TAB 3 -->
+<div id="tab3" class="card" style="display:none">
+<h3 style="margin:0">Is Mahine Baki Wale</h3>
+<p class="small">Due Date ke hisab se list hai</p>
+<div id="baki_list"></div>
+</div>
+
+<script>
+let customers = JSON.parse(localStorage.getItem('rd_cust')||'[]');
+let jama = JSON.parse(localStorage.getItem('rd_jama')||'[]');
+
+function save(){ localStorage.setItem('rd_cust', JSON.stringify(customers)); localStorage.setItem('rd_jama', JSON.stringify(jama)); render(); }
+
+function showTab(n){
+  document.getElementById('tab1').style.display = n==1?'block':'none';
+  document.getElementById('tab2').style.display = n==2?'block':'none';
+  document.getElementById('tab3').style.display = n==3?'block':'none';
+  document.getElementById('t1').className = n==1?'active':'';
+  document.getElementById('t2').className = n==2?'active':'';
+  document.getElementById('t3').className = n==3?'active':'';
+  render();
+}
+
+function addCustomer(){
+  let c = {
+    name: document.getElementById('f_name').value.trim(),
+    ac: document.getElementById('f_ac').value.trim(),
+    cif: document.getElementById('f_cif').value.trim(),
+    mob: document.getElementById('f_mob').value.trim(),
+    addr: document.getElementById('f_addr').value.trim(),
+    amt: +document.getElementById('f_amt').value,
+    start: document.getElementById('f_start').value,
+    due: document.getElementById('f_due').value
+  };
+  if(!c.name || !c.ac || !c.amt || !c.start || !c.due){ alert('Bhai, Naam, Account, Amount, Start Date aur Due Date sab bharo!'); return; }
+  if(c.due < 1 || c.due > 31){ alert('Due Date 1 se 31 ke beech me daalo'); return; }
+  customers.push(c);
+  save();
+  alert('Ho Gaya! ' + c.name + ' Save Ho Gaya. Due Date: ' + c.due);
+  document.getElementById('f_name').value='';
+  document.getElementById('f_ac').value='';
+  document.getElementById('f_cif').value='';
+  document.getElementById('f_mob').value='';
+  document.getElementById('f_addr').value='';
+  document.getElementById('f_amt').value='';
+  document.getElementById('f_start').value='';
+  document.getElementById('f_due').value='';
+}
+
+function addJama(){
+  let idx = document.getElementById('j_cust').value;
+  let amt = +document.getElementById('j_amt').value;
+  let mon = document.getElementById('j_month').value;
+  if(idx==='' || !amt || !mon){ alert('Customer, Amount aur Mahina chuno'); return; }
+  jama.push({cust:idx, amt:amt, month:mon});
+  save();
+  alert('Jama Ho Gaya!');
+}
+
+function delCust(i){ if(confirm('Pakka delete karna hai?')){ customers.splice(i,1); save(); } }
+
+function render(){
+  let html='';
+  customers.forEach((c,i)=>{
+    html += `<div class="cust"><button class="del" onclick="delCust(${i})">X</button><b>${c.name}</b><br><span class="small">A/c: ${c.ac} | CIF: ${c.cif||'-'} | Mob: ${c.mob||'-'}<br>RD: ₹${c.amt} | Start: ${c.start} | <b>Due Date: ${c.due} Tarikh</b></span></div>`;
+  });
+  document.getElementById('list').innerHTML = html || '<p class="small">Abhi koi customer nahi hai</p>';
+
+  let opts='';
+  customers.forEach((c,i)=>{ opts += `<option value="${i}">${c.name} - ${c.ac}</option>`; });
+  document.getElementById('j_cust').innerHTML = opts;
+
+  let jhtml='';
+  jama.slice().reverse().forEach(j=>{
+    let cu = customers[j.cust];
+    jhtml += `<div class="cust"><b>${cu?cu.name:'Deleted'}</b> - ₹${j.amt} <span class="small">(${j.month})</span></div>`;
+  });
+  document.getElementById('j_list').innerHTML = jhtml;
+
+  // BAKI WALE - Due Date se
+  let today = new Date();
+  let curMonth = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0');
+  let bhtml='';
+  customers.forEach(c=>{
+    let paid = jama.some(j=> j.cust == customers.indexOf(c) && j.month == curMonth);
+    let dueDay = parseInt(c.due) || new Date(c.start).getDate();
+    let dueDate = new Date(today.getFullYear(), today.getMonth(), dueDay);
+    let status = paid ? '<span class="badge green">JAMA HO GAYA</span>' : (today > dueDate ? '<span class="badge red">BAKI - DUE NIKAL GAYA</span>' : '<span class="badge orange">BAKI - DUE AANE WALA HAI</span>');
+    bhtml += `<div class="cust"><b>${c.name}</b> - ₹${c.amt}<br><span class="small">Due: ${dueDay} Tarikh | ${status}</span></div>`;
+  });
+  document.getElementById('baki_list').innerHTML = bhtml || '<p>Abhi koi customer nahi</p>';
+}
+render();
+</script>
+</body>
+</html>
